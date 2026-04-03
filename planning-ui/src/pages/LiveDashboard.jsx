@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, LabelList } from "recharts";
 import Sidebar from "../components/Sidebar";
 
-const API = "http://localhost:8020/dashboard";
+const API_BASE = import.meta.env.VITE_API_URL;
+const API = `${API_BASE}/dashboard`;
 
 export default function LiveDashboard() {
 
@@ -15,9 +16,23 @@ export default function LiveDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const live = await fetch(`${API}/live`).then(r => r.json());
-        const plan = await fetch(`${API}/plan-vs-actual?date=${today}`).then(r => r.json());
-        const trend = await fetch(`${API}/mt-trend`).then(r => r.json());
+        const token = localStorage.getItem("token");
+
+        const live = await fetch(`${API}/live`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }).then(r => r.json());
+        const plan = await fetch(`${API}/plan-vs-actual?date=${today}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }).then(r => r.json());
+        const trend = await fetch(`${API}/mt-trend`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }).then(r => r.json());
         setMtTrend(trend);
 
         setData(live);

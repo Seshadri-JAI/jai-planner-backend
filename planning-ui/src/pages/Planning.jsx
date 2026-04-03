@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Sidebar from "../components/Sidebar";
 
-const API = "http://localhost:8020/planning";
+const API_BASE = import.meta.env.VITE_API_URL;
+const API = `${API_BASE}/planning`;
 
 export default function Planning() {
 

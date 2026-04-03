@@ -1,7 +1,8 @@
 import { useEffect, useState, Fragment, useMemo } from "react";
 import Sidebar from "../components/Sidebar";
 
-const API = "http://localhost:8020/planning";
+const API_BASE = import.meta.env.VITE_API_URL;
+const API = `${API_BASE}/planning`;
 
 const STAGES = ["RM", "SPVC", "BHT", "Parabolic", "HT", "Comp", "Paint"];
 
@@ -10,6 +11,7 @@ export default function ExecutionGrid() {
   const [data, setData] = useState([]);
   const [criticalRows, setCriticalRows] = useState([]);
   const [locked, setLocked] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const [date, setDate] = useState(
     new Date().toISOString().split("T")[0]
@@ -98,8 +100,21 @@ export default function ExecutionGrid() {
   };
 
   const closeDay = async () => {
-    await fetch(`${API}/close-day?date=${date}`, { method: "POST" });
-    load();
+    try {
+      const res = await fetch(`${API}/close-day?date=${date}`, {
+        method: "POST"
+      });
+
+      const data = await res.json();
+
+      alert(data.message || "Day closed successfully");
+
+      load();
+
+    } catch (err) {
+      console.error("Close day error:", err);
+      alert("Failed to close day");
+    }
   };
 
   // ------------------------
@@ -289,7 +304,9 @@ export default function ExecutionGrid() {
           {!locked && (
             <>
               <button style={primaryBtn} onClick={save}>Save</button>
-              <button style={dangerBtn} onClick={closeDay}>Close Day</button>
+              <button onClick={() => setShowConfirm(true)}>
+                Close Day
+              </button>
             </>
           )}
         </div>
@@ -404,6 +421,42 @@ export default function ExecutionGrid() {
             + Add Row
           </button>
         </div>
+        {showConfirm && (
+          <div style={modalOverlay}>
+            <div style={modalBox}>
+              <h3>Confirm Close Day</h3>
+        
+              <p style={{ marginTop: 10 }}>
+                Are you sure you want to close the day?
+                <br /><br />
+                Pending quantities will be carried forward.
+              </p>
+
+              <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+                <button
+                  onClick={() => setShowConfirm(false)}
+                  style={{ padding: 10 }}
+                >
+                  Cancel
+                </button>
+        
+                <button
+                  style={{
+                    background: "#C8102E",
+                    color: "white",
+                    padding: 10
+                  }}
+                  onClick={async () => {
+                    setShowConfirm(false);
+                    await closeDay();
+                  }}
+                >
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
@@ -428,3 +481,25 @@ const lineMTBox = { display: "flex", gap: 10 };
 const lineMTCard = { background: "#111", padding: 10, color: "#00ff88" };
 const shiftHeader = { background: "#222", color: "#00d4ff" };
 const lineHeader = { background: "#111", color: "#ffcc00", paddingLeft: 20 };
+const modalOverlay = {
+  position: "fixed",
+  top: 0,
+  left: 0,
+  width: "100%",
+  height: "100%",
+  background: "rgba(0,0,0,0.7)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  zIndex: 1000
+};
+
+const modalBox = {
+  background: "#1c1c1c",
+  padding: 25,
+  borderRadius: 10,
+  color: "white",
+  minWidth: 300,
+  textAlign: "center"
+};
+

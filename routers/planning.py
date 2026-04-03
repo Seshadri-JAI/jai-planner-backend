@@ -674,12 +674,10 @@ def generate_next_day_plan(data: dict, db: Session = Depends(get_db)):
     next_date_obj = datetime.strptime(next_date, "%Y-%m-%d").date()
 
     plans = db.query(DailyPlan).filter_by(date=date_obj).all()
-    db.query(DailyPlan).filter_by(date=next_date_obj).delete()
 
     actuals = db.query(DailyActual).filter_by(date=date_obj).all()
 
-    # Clear next day plan
-    db.query(DailyPlan).filter_by(date=next_date_obj).delete()
+
 
     for p in plans:
         part = p.part_number
@@ -709,14 +707,26 @@ def generate_next_day_plan(data: dict, db: Session = Depends(get_db)):
         next_plan = p.planned_qty - qa   # ✅ YOUR REQUIREMENT
 
         if next_plan > 0:
-            db.add(DailyPlan(
+
+            existing = db.query(DailyPlan).filter_by(
                 date=next_date_obj,
-                shift="A",
                 part_number=part,
-                planned_qty=next_plan,
-                priority=p.priority,
-                line=p.line   # 🔥 VERY IMPORTANT
-            ))
+                shift=p.shift   # 🔥 VERY IMPORTANT
+            ).first()
+
+            if existing:
+                # ✅ ADD carry forward
+                existing.planned_qty = max(existing.planned_qty, next_plan)
+            else:
+                # ✅ CREATE NEW
+                db.add(DailyPlan(
+                    date=next_date_obj,
+                    shift=p.shift,
+                    part_number=part,
+                    planned_qty=next_plan,
+                    priority=p.priority,
+                    line=p.line
+                ))
 
     db.commit()
 

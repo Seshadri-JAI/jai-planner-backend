@@ -5,7 +5,8 @@ import {
 } from "recharts";
 
 // Configurable constants
-const API_BASE_URL = "http://localhost:8020/dashboard";
+const API_BASE = import.meta.env.VITE_API_URL;
+const API = `${API_BASE}/dashboard`;
 const REFRESH_INTERVAL_MS = 10000;  // Data refresh interval
 const ROTATION_INTERVAL_MS = 8000;  // Screen rotate interval
 const LOGO_PATH = "/assets/logo.png";  // Path to logo image

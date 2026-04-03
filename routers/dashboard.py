@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from collections import defaultdict
 from models import DailyActual, Assembly
 from collections import defaultdict
+from routers.auth import get_current_user
 
 from database import get_db
 from models import StagePlan, DailyActual, DailyPlan, Assembly
@@ -18,7 +19,10 @@ SHIFTS = ["A", "B", "C"]
 # LIVE DASHBOARD
 # ============================
 @router.get("/live")
-def get_live_dashboard(db: Session = Depends(get_db)):
+def get_live_dashboard(
+    db: Session = Depends(get_db),
+    user=Depends(get_current_user)
+):
 
     stage_data = db.query(StagePlan).all()
     actual_data = db.query(DailyActual).all()
